@@ -86,26 +86,41 @@ public:
     std::string get_name() override { return "deviation"; }
 };
 
+class deviation_norm_fun : public scalar_func
+{
+public:
+    double operator () (std::vector<double>::iterator start, std::vector<double>::iterator end) override;
+    std::string get_name() override { return "normalized deviation"; }
+};
+
 class dynamic_range_func : public scalar_func
 {
+public:
     double operator () (std::vector<double>::iterator start, std::vector<double>::iterator end) override;
     std::string get_name() override {return "dynamic range";}
 };
 
 class low_ratio_fun : public scalar_func
 {
+public:
     double operator () (std::vector<double>::iterator start, std::vector<double>::iterator end) override;
     std::string get_name() override {return "low ratio"; }
 };
 
 class entropy_func : public scalar_func
 {
+public:
+    public:
     double operator () (std::vector<double>::iterator start, std::vector<double>::iterator end) override;
     std::string get_name() override { return "entropy"; }
+    entropy_func(AudioFile<double> &af_in) : af(af_in) {}
+private:
+    AudioFile<double> &af;
 };
 
 class high_ratio_fun : public scalar_func
 {
+public:
     double operator () (std::vector<double>::iterator start, std::vector<double>::iterator end) override;
     std::string get_name() override {return "high ratio"; }
 };

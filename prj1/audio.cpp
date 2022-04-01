@@ -6,7 +6,7 @@ void audio::init(std::string filename)
     af.load(filename);
     tv.resize(af.getNumSamplesPerChannel());
     double period = af.getLengthInSeconds() / static_cast<double>(tv.size() - 1);
-    for (int i = 0; i < tv.size(); i++) {
+    for (uint i = 0; i < tv.size(); i++) {
         tv[i] = period * static_cast<double>(i);
     }
     ffs.clear();
@@ -24,15 +24,16 @@ void audio::init(std::string filename)
 
     scalars.clear();
     scalar_vals.clear();
-    scalars.resize(5);
-    scalars[0] = { ffs[0]->get_name(), std::make_unique<deviation_fun>() };
+    scalars.resize(6);
+    scalars[0] = { ffs[0]->get_name(), std::make_unique<deviation_norm_fun>() };
     scalars[1] = { ffs[0]->get_name(), std::make_unique<dynamic_range_func>() };
     scalars[2] = { ffs[1]->get_name(), std::make_unique<low_ratio_fun>() };
     scalars[3] = { ffs[2]->get_name(), std::make_unique<deviation_fun>() };
     scalars[4] = { ffs[2]->get_name(), std::make_unique<high_ratio_fun>() };
+    scalars[5] = { ffs[1]->get_name(), std::make_unique<entropy_func>(af) };
 
     for (auto &sf : scalars) {
-        scalar_vals.emplace(sf.second->get_name() + " (" + sf.first + ") ",
+        scalar_vals.emplace(sf.second->get_name() + " (" + sf.first + "): ",
             (*(sf.second))(tps.find(sf.first)->second.vals.begin(),
             tps.find(sf.first)->second.vals.end()));
     }
@@ -113,7 +114,6 @@ double ff_fun::operator () (std::vector<double> main_ts, uint offset, uint frame
     uint best_l = 0;
     for (uint l = 40; l < frame_size * 2 / 3; l++) {
         double rm = 0;
-        uint N = 0;
         for (uint i = 0; i < frame_size - l; i++) {
             rm += main_ts[offset + i] * main_ts[offset + i + l];
         }
@@ -152,6 +152,20 @@ double deviation_fun::operator () (std::vector<double>::iterator start, std::vec
     return sqrt(dev / N);
 }
 
+double deviation_norm_fun::operator () (std::vector<double>::iterator start, std::vector<double>::iterator end)
+{
+    double avg = average(start, end);
+    double N = static_cast<double>(end - start);
+    double max_vol = *std::max_element(start, end);
+    double dev = 0;
+
+    for (auto it = start; it < end; ++it) {
+        dev += pow(*it - avg, 2);
+    }
+
+    return sqrt(dev / N) / max_vol;
+}
+
 double dynamic_range_func::operator () (std::vector<double>::iterator start, std::vector<double>::iterator end)
 {
     double max_v = *std::max_element(start, end);
@@ -174,7 +188,19 @@ double low_ratio_fun::operator () (std::vector<double>::iterator start, std::vec
 }
 
 double entropy_func::operator () (std::vector<double>::iterator start, std::vector<double>::iterator end)
-{}
+{
+    ste_fun sf;
+    audio::time_params k_frames(af, sf, 100, 0);
+    audio::time_params n_frames(af, sf, 1200, 0);
+
+    double sum = 0;
+    for (uint i = 0; i < k_frames.vals.size(); i++) {
+        double sigma = k_frames.vals[i] / n_frames.vals[i / 12];
+        sum -= sigma * log2(sigma);
+    }
+
+    return sum;
+}
 
 double high_ratio_fun::operator () (std::vector<double>::iterator start, std::vector<double>::iterator end)
 {

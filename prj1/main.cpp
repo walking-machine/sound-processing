@@ -1,12 +1,3 @@
-// Dear ImGui: standalone example application for SDL2 + SDL_Renderer
-// (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
-
-// Important to understand: SDL_Renderer is an _optional_ component of SDL. We do not recommend you use SDL_Renderer
-// because it provide a rather limited API to the end-user. We provide this backend for the sake of completeness.
-// For a multi-platform app consider using e.g. SDL+DirectX on Windows and SDL+OpenGL on Linux/OSX.
-
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
@@ -47,21 +38,14 @@ int main(int, char**)
 
     SDL_Texture *img = IMG_LoadTexture(renderer, "the_soul_of_sound-1920x1080.jpg");
 
-    //SDL_RendererInfo info;
-    //SDL_GetRendererInfo(renderer, &info);
-    //SDL_Log("Current SDL_Renderer: %s", info.name);
-
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsLight();
-    //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
@@ -71,24 +55,7 @@ int main(int, char**)
     fileDialog.SetTypeFilters({ ".wav" });
     audio a;
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
-
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Main loop
@@ -148,15 +115,6 @@ int main(int, char**)
 
                     ImPlot::EndSubplots();
                 }
-
-                // if (ImPlot::BeginPlot("Data")) {
-                //     ImPlot::PlotLine("0", a.get_time_vec().data(), a.get_main_vec().data(), a.num_samples() - 2, 0, 1 * sizeof(double));
-                //     for (auto &tp : a.tps) {
-                //         ImPlot::PlotLine(tp.first.c_str(), tp.second.time_vec.data(), tp.second.vals.data(),
-                //             tp.second.time_vec.size());
-                //     }
-                //     ImPlot::EndPlot();
-                // }
 
                 for (auto &s : a.scalar_vals) {
                     ImGui::Text(s.first.c_str()); ImGui::SameLine();

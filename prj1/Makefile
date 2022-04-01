@@ -15,10 +15,10 @@
 #CXX = clang++
 
 EXE = sound_analyzer
-IMGUI_DIR = /home/lara/repos/imgui
-IMPLOT_DIR = /home/lara/sound/implot
-AUDIO_DIR = /home/lara/sound/AudioFile
-IMFILE_DIR = /home/lara/sound/imgui-filebrowser
+IMGUI_DIR = ../imgui
+IMPLOT_DIR = ../implot
+AUDIO_DIR = ../AudioFile
+IMFILE_DIR = ../imgui-filebrowser
 SOURCES = main.cpp audio.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl.cpp $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer.cpp
