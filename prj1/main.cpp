@@ -10,9 +10,12 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
+#include "implot.h"
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <imfilebrowser.h>
+#include "audio.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -51,6 +54,7 @@ int main(int, char**)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -62,6 +66,10 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer_Init(renderer);
+    ImGui::FileBrowser fileDialog;
+    fileDialog.SetTitle("title");
+    fileDialog.SetTypeFilters({ ".wav" });
+    audio a;
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -107,41 +115,63 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            ImGui::Begin("Audio");
+            if (ImGui::Button("Open file")) {
+                fileDialog.Open();
+            }
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            if (a.is_loaded())
+            {
+                ImGui::Text("Loaded");
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+                static ImPlotSubplotFlags flags = ImPlotSubplotFlags_LinkAllX;
+                if (ImPlot::BeginSubplots("Audio", a.tps.size() + 1, 1, ImVec2(-1,1000), flags)) {
+                    
+                    if (ImPlot::BeginPlot("Data")) {
+                        ImPlot::PlotLine("0", a.get_time_vec().data(), a.get_main_vec().data(), a.num_samples() - 2, 0, 1 * sizeof(double));
+                        for (auto &tp : a.tps) {
+                            ImPlot::PlotLine(tp.first.c_str(), tp.second.time_vec.data(), tp.second.vals.data(),
+                                tp.second.time_vec.size());
+                        }
+                    ImPlot::EndPlot();
+                    }
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+                    for (auto &tp : a.tps) {
+                        if (ImPlot::BeginPlot(tp.first.c_str())) {
+                            ImPlot::PlotLine(tp.first.c_str(), tp.second.time_vec.data(), tp.second.vals.data(),
+                                tp.second.time_vec.size());
+                            ImPlot::EndPlot();
+                        }
+                    }
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+                    ImPlot::EndSubplots();
+                }
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                // if (ImPlot::BeginPlot("Data")) {
+                //     ImPlot::PlotLine("0", a.get_time_vec().data(), a.get_main_vec().data(), a.num_samples() - 2, 0, 1 * sizeof(double));
+                //     for (auto &tp : a.tps) {
+                //         ImPlot::PlotLine(tp.first.c_str(), tp.second.time_vec.data(), tp.second.vals.data(),
+                //             tp.second.time_vec.size());
+                //     }
+                //     ImPlot::EndPlot();
+                // }
+
+                for (auto &s : a.scalar_vals) {
+                    ImGui::Text(s.first.c_str()); ImGui::SameLine();
+                    ImGui::Text(std::to_string(s.second).c_str());
+                }
+            }
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
+        fileDialog.Display();
+        if (fileDialog.HasSelected())
         {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
+            std::cout << "Loading " << fileDialog.GetSelected().string() << "\n";
+            a.init(fileDialog.GetSelected().string());
+            fileDialog.ClearSelected();
         }
 
         // Rendering
@@ -159,6 +189,7 @@ int main(int, char**)
     // Cleanup
     ImGui_ImplSDLRenderer_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImPlot::CreateContext();
     ImGui::DestroyContext();
 
     SDL_DestroyRenderer(renderer);

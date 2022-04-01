@@ -1,0 +1,9 @@
+[submodule "AudioFile"]
+	path = AudioFile
+	url = https://github.com/adamstark/AudioFile
+[submodule "implot"]
+	path = implot
+	url = https://github.com/epezent/implot.git
+[submodule "imgui-filebrowser"]
+	path = imgui-filebrowser
+	url = https://github.com/AirGuanZ/imgui-filebrowser.git
